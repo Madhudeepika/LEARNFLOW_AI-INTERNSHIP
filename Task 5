@@ -1,0 +1,93 @@
+# Task 5 : Predictive Analytics with Time Series Forecasting
+# Problem Statement:
+# Create a time series forecasting model for predicting future values based on historical
+# data. Use a dataset such as the Daily Climate Time Series Data.
+
+
+
+
+import pandas as pd
+
+# Load the dataset
+data = pd.read_csv(r"A:\AI internship\Task 5\DailyDelhiClimateTrain.csv")
+
+# Display basic information about the dataset
+print(data.info())
+
+# Display the first few rows of the dataset
+print(data.head())
+
+# Handle missing values (assuming forward fill for simplicity)
+data.fillna(method='ffill', inplace=True)
+
+# Convert the time column to datetime format
+data['date'] = pd.to_datetime(data['date'])
+
+# Check for outliers and remove if necessary
+# ...
+
+# Visualize the data
+import matplotlib.pyplot as plt
+
+plt.plot(data['date'], data['meantemp'])
+plt.title('windspeed')
+plt.xlabel('date')
+plt.ylabel('meantemp')
+plt.show()
+
+import matplotlib.pyplot as plt
+
+plt.plot(data['wind_speed'], data['humidity'])
+plt.title('windspeed')
+plt.xlabel('wind_speed')
+plt.ylabel('humidity')
+plt.show()
+
+# Extract features from the timestamp
+data['Year'] = data['date'].dt.year
+data['Month'] = data['date'].dt.month
+data['Day'] = data['date'].dt.day
+
+# Lag features (assuming a lag of 1 for simplicity)
+data['date'] = data['wind_speed'].shift(1)
+
+# Drop rows with NaN values after lagging
+data.dropna(inplace=True)
+
+
+# Assuming a simple split (you may use more sophisticated methods)
+train_size = int(len(data) * 0.8)
+train_data, test_data = data[:train_size], data[train_size:]
+
+
+
+from statsmodels.tsa.arima.model import ARIMA
+
+# Assuming p, d, q values based on analysis
+p, d, q = 1, 1, 1
+model = ARIMA(train_data['humidity'], order=(p, d, q))
+
+
+
+fit_model = model.fit()
+
+
+# Forecast future values
+predictions = fit_model.predict(start=len(train_data), end=len(data)-1, typ='levels')
+
+# Evaluate the model
+from sklearn.metrics import mean_squared_error
+
+mse = mean_squared_error(test_data['humidity'], predictions)
+print(f'Mean Squared Error: {mse}')
+
+
+# Assuming you have new data for forecasting
+future_data = pd.read_csv('future_data.csv')  # Update with your new data
+future_data['Date'] = pd.to_datetime(future_data['Date'])
+
+# Feature engineering for future data (similar to Step 3)
+# ...
+
+# Forecast future values
+future_predictions = fit_model.predict(start=len(data), end=len(data) + len(future_data) - 1, typ='levels')
