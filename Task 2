@@ -1,0 +1,175 @@
+#Task 2 : Healthcare Diagnosis with Medical Imaging
+#Problem Statement:
+#Create a model for medical image analysis, such as diagnosing diseases from X-rays 
+# or
+# MRIs. Utilize a dataset like the Chest X-Ray Images (Pneumonia) dataset.
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from tensorflow import keras
+from tensorflow.keras import layers
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+# Data Preprocessing 
+
+train_path = (r"A:\AI internship\chest_xray\train")
+test_path = (r"A:\AI internship\chest_xray\test")
+val_path = (r"A:\AI internship\chest_xray\val")
+
+
+# Use ImageDataGenerator for data augmentation and normalization.
+
+datagen = ImageDataGenerator(rescale=1./255, shear_range=0.2, zoom_range=0.2, horizontal_flip=True)
+
+train_data = datagen.flow_from_directory(train_path, target_size=(224, 224), batch_size=32, class_mode='binary')
+test_data = datagen.flow_from_directory(test_path, target_size=(224, 224), batch_size=32, class_mode='binary')
+val_data = datagen.flow_from_directory(val_path, target_size=(224, 224), batch_size=32, class_mode='binary')
+
+# Build CNN Model: Construct a CNN model for image classification.
+
+model = keras.Sequential([
+    layers.Conv2D(32, (3, 3), activation='relu', input_shape=(224, 224, 3)),
+    layers.MaxPooling2D(2, 2),
+    layers.Conv2D(64, (3, 3), activation='relu'),
+    layers.MaxPooling2D(2, 2),
+    layers.Conv2D(128, (3, 3), activation='relu'),
+    layers.MaxPooling2D(2, 2),
+    layers.Flatten(),
+    layers.Dense(128, activation='relu'),
+    layers.Dense(1, activation='sigmoid')  # Binary classification (Normal or Pneumonia)
+])
+
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+
+# Train the Model: Train the model using the training dataset.
+
+model.fit(train_data, epochs=10, validation_data=val_data)
+
+
+
+test_loss, test_accuracy = model.evaluate(test_data)
+print(f'Test Accuracy: {test_accuracy*100:.2f}%')
+
+
+# Example prediction
+img_path = (r"A:\AI internship\chest_xray\test\NORMAL\IM-0001-0001.jpeg")
+img = keras.preprocessing.image.load_img(img_path, target_size=(224, 224))
+img_array = keras.preprocessing.image.img_to_array(img)
+img_array = np.expand_dims(img_array, axis=0)
+
+prediction = model.predict(img_array)
+print(f'Prediction: {prediction[0][0]}')  # Probability of pneumonia
+
+
+
+
+
+from sklearn.metrics import confusion_matrix, classification_report
+
+# Get predictions on the test set
+y_pred = (model.predict(test_data) > 0.5).astype("int32")
+
+# Get true labels
+y_true = test_data.classes
+
+# Generate confusion matrix
+cm = confusion_matrix(y_true, y_pred)
+
+# Print confusion matrix and classification report
+print("Confusion Matrix:")
+print(cm)
+print("\nClassification Report:")
+print(classification_report(y_true, y_pred))
+
+from sklearn.metrics import classification_report, confusion_matrix
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Get predictions on the test set
+y_pred = (model.predict(test_data) > 0.5).astype("int32")
+
+# Get true labels
+y_true = test_data.classes
+
+# Generate confusion matrix
+cm = confusion_matrix(y_true, y_pred)
+
+# Print confusion matrix and classification report
+print("Confusion Matrix:")
+print(cm)
+print("\nClassification Report:")
+print(classification_report(y_true, y_pred))
+
+# Plot the confusion matrix
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['Normal', 'Pneumonia'], yticklabels=['Normal', 'Pneumonia'])
+plt.xlabel('Predicted')
+plt.ylabel('True')
+plt.title('Confusion Matrix')
+plt.show()
+
+# Plot ROC curve (Receiver Operating Characteristic)
+from sklearn.metrics import roc_curve, auc
+
+fpr, tpr, _ = roc_curve(y_true, model.predict(test_data))
+roc_auc = auc(fpr, tpr)
+
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'AUC = {roc_auc:.2f}')
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Receiver Operating Characteristic Curve')
+plt.legend(loc='lower right')
+plt.show()
+
+
+pip install imbalanced-learn
+from imblearn.over_sampling import RandomOverSampler
+from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
+
+# Step 1: Address Class Imbalance
+ros = RandomOverSampler(random_state=42)
+X_resampled, y_resampled = ros.fit_resample(X, y)  # Replace X and y with your actual data
+
+# Shuffle the resampled data
+X_resampled, y_resampled = shuffle(X_resampled, y_resampled, random_state=42)
+
+# Split the data into train and test sets
+X_train, X_test, y_train, y_test = train_test_split(X_resampled, y_resampled, test_size=0.2, random_state=42)
+
+# Rebuild and train the model using the resampled data
+model_resampled = build_model()  # Rebuild your CNN model
+model_resampled.fit(X_train, y_train, epochs=10, validation_data=(X_test, y_test))
+
+# Evaluate the model on the test set
+test_loss_resampled, test_accuracy_resampled = model_resampled.evaluate(X_test, y_test)
+print(f'Test Accuracy with Resampling: {test_accuracy_resampled*100:.2f}%')
+
+# Step 2: Threshold Adjustment
+# Experiment with different probability thresholds (e.g., 0.4) for making predictions
+threshold = 0.4
+y_pred_adjusted = (model.predict(X_test) > threshold).astype("int32")
+
+# Evaluate the adjusted predictions
+adjusted_accuracy = np.mean(y_pred_adjusted == y_test)
+print(f'Test Accuracy with Adjusted Threshold: {adjusted_accuracy*100:.2f}%')
+
+# Step 3: Fine-tuning the Model
+# Perform hyperparameter tuning, model architecture adjustments, or transfer learning
+# Rebuild and train the model with the optimized configuration
+model_optimized = build_optimized_model()  # Replace with your optimized model architecture
+model_optimized.fit(X_train, y_train, epochs=15, validation_data=(X_test, y_test))
+
+# Evaluate the optimized model on the test set
+test_loss_optimized, test_accuracy_optimized = model_optimized.evaluate(X_test, y_test)
+print(f'Test Accuracy with Optimized Model: {test_accuracy_optimized*100:.2f}%')
+
+# Step 4: Data Exploration (Optional)
+# Investigate misclassified samples, apply additional data preprocessing, or perform feature engineering
+
+# Step 5: Validation Set (Optional)
+# Ensure that the model performs well on a separate validation set to avoid overfitting
