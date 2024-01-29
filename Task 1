@@ -1,0 +1,66 @@
+# Task 1 : Gesture Recognition using Deep Learning
+# Problem Statement:
+# Develop a model to recognize hand gestures from image or video input.
+# Use a dataset like
+# the American Sign Language (ASL) dataset for training.
+
+
+
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+# Step 2: Load and Preprocess the Data
+train_datagen = ImageDataGenerator(rescale=1./255)
+test_datagen = ImageDataGenerator(rescale=1./255)
+
+train_generator = train_datagen.flow_from_directory(
+    (r"A:\AI internship\Task 1\asl_alphabet_train\asl_alphabet_train"),
+    target_size=(64, 64),  # adjust size as needed
+    batch_size=32,
+    class_mode='categorical'
+)
+
+validation_generator = test_datagen.flow_from_directory(
+    (r"A:\AI internship\Task 1\asl_alphabet_test\asl_alphabet_test"),
+    target_size=(64, 64),
+    batch_size=32,
+    class_mode='categorical'
+)
+
+# Step 3: Build the Model
+num_classes = len(train_generator.class_indices)
+
+model = models.Sequential()
+model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(64, 64, 3)))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(128, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Flatten())
+model.add(layers.Dense(128, activation='relu'))
+model.add(layers.Dropout(0.5))  # optional, helps prevent overfitting
+model.add(layers.Dense(num_classes, activation='softmax'))
+
+# Step 4: Compile the Model
+model.compile(optimizer='adam',
+              loss='categorical_crossentropy',
+              metrics=['accuracy'])
+
+# Step 5: Train the Model
+history = model.fit(
+    train_generator,
+    epochs=10,  # adjust as needed
+    validation_data=validation_generator
+)
+
+# Step 6: Evaluate the Model
+test_loss, test_acc = model.evaluate(validation_generator)
+print(f'Test accuracy: {test_acc}')
+
+# Step 7: Make Predictions
+# You can use model.predict for making predictions on new data.
+# For example:
+# new_data = ...  # Load your new data
+# predictions = model.predict(new_data)
