@@ -1,0 +1,46 @@
+# Natural Language Processing (NLP) for Sentiment Analysis
+# Problem Statement:
+# Build a sentiment analysis model using NLP techniques.
+#  The goal is to classify text reviews
+# as positive, negative, or neutral. Use a dataset like the IMDb Movie Reviews dataset.
+
+# Import necessary libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load the IMDb Movie Reviews dataset
+# You can download the dataset from https://ai.stanford.edu/~amaas/data/sentiment/
+# Make sure to adjust the file path accordingly
+dataset_path = "A:\AI internship\TAsk 2\IMDB Dataset.csv"
+df = pd.read_csv(dataset_path)
+
+# Preprocess the data
+# Assuming the dataset has columns 'review' and 'sentiment'
+X = df['review']
+y = df['sentiment']
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Convert the text data into numerical features using CountVectorizer
+vectorizer = CountVectorizer(stop_words='english')
+X_train_vectorized = vectorizer.fit_transform(X_train)
+X_test_vectorized = vectorizer.transform(X_test)
+
+# Build a Naive Bayes classifier
+classifier = MultinomialNB()
+classifier.fit(X_train_vectorized, y_train)
+
+# Make predictions on the test set
+y_pred = classifier.predict(X_test_vectorized)
+
+# Evaluate the model
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy:.2f}")
+
+# Display classification report
+print("Classification Report:")
+print(classification_report(y_test, y_pred))
