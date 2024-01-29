@@ -1,7 +1,7 @@
 # Task 1 : Gesture Recognition using Deep Learning
 # Problem Statement:
 # Develop a model to recognize hand gestures from image or video input.
-# Use a dataset like
+#Use a dataset like
 # the American Sign Language (ASL) dataset for training.
 
 
